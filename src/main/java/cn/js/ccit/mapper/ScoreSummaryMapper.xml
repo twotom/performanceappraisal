@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.js.ccit.DAO.ScoreSummaryDAO">
+
+    <resultMap id="scoreSummary" type="ScoreSummary">
+        <id column="id" property="id"></id>
+        <result column="score" jdbcType="DOUBLE" property="score"/>
+        <association property="department" javaType="Department">
+            <id column="d_id" property="id" jdbcType="INTEGER"/>
+            <result column="d_shortName" property="shortName" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+
+    <!-- 常规工作统计 -->
+    <select id="regularSummary" resultMap="scoreSummary" parameterType="map">
+        SELECT
+        d.id AS d_id,
+        d.shortName AS d_shortName,
+        format(
+        IFNULL(
+        IFNULL(t1.score ,0)* 0.4 + IFNULL(t2.score,0) * 0.6,
+        0
+        ) * 0.15,
+        2
+        ) AS score
+        FROM
+        department AS d
+        LEFT JOIN
+        (
+        SELECT
+        rw.department,
+        e.identity,
+        AVG(score) AS score
+        FROM
+        regular_work AS rw
+        LEFT JOIN employee e ON rw.evaluator = e.empId
+        WHERE
+        e.identity = 11
+        GROUP BY
+        rw.department
+        ) AS t1 ON d.id = t1.department
+        LEFT JOIN (
+        SELECT
+        rw.department,
+        e.identity,
+        AVG(score) AS score
+        FROM
+        regular_work AS rw
+        LEFT JOIN employee e ON rw.evaluator = e.empId
+        WHERE
+        e.identity = 12
+        GROUP BY
+        rw.department
+        ) AS t2 ON  d.id = t2.department
+        WHERE
+        d.id LIKE '2%'
+        <if test="department!=null">
+            and d.id =#{department,jdbcType=INTEGER}
+        </if>
+    </select>
+    <!-- 满意度-上级评价统计 -->
+    <select id="satisfactionSuperiorSummary" resultMap="scoreSummary" parameterType="map">
+        SELECT
+        d.id AS d_id,
+        d.shortName AS d_shortName,
+        format(
+        IFNULL(
+        (
+        0.4 * IFNULL(t1.score, 0) + 0.3 * IFNULL(t2.score, 0) + 0.3 * IFNULL(t3.score, 0)
+        )
+        <choose>
+            <when test="percent">
+                *1
+            </when>
+            <otherwise>
+                *0.15
+
+            </otherwise>
+        </choose>
+        ,
+        0
+        ),
+        2
+        ) AS score
+        FROM
+        department AS d
+        LEFT JOIN (
+        SELECT
+        department,
+        AVG(score) AS score
+        FROM
+        (
+        SELECT
+        se.department,
+        AVG(se.score) AS score
+        FROM
+        satisfaction_evaluation AS se
+        LEFT JOIN (
+        employee AS e
+        LEFT JOIN emp_role AS er ON er.employee = e.empId
+        ) ON e.empId = se.evaluator
+        WHERE
+        er.department = se.department
+        AND se.indicator = 1
+        GROUP BY
+        se.department,
+        se.evaluator
+        ) AS t
+        GROUP BY
+        t.department
+        ) AS t1 ON d.id = t1.department
+        LEFT JOIN (
+        SELECT
+        department,
+        AVG(score) AS score
+        FROM
+        (
+        SELECT
+        se.department,
+        AVG(score) AS score
+        FROM
+        satisfaction_evaluation AS se
+        LEFT JOIN employee AS e ON e.empId = se.evaluator
+        WHERE
+        e.identity = 11
+        AND se.indicator = 1
+        GROUP BY
+        se.department,
+        se.evaluator
+        ) AS t
+        GROUP BY
+        t.department
+        ) AS t2 ON t2.department = d.id
+        LEFT JOIN (
+        SELECT
+        department,
+        AVG(score) AS score
+        FROM
+        (
+        SELECT
+        se.department,
+        AVG(score) AS score
+        FROM
+        satisfaction_evaluation AS se
+        LEFT JOIN employee AS e ON e.empId = se.evaluator
+        WHERE
+        e.identity = 12
+        AND se.indicator = 1
+        GROUP BY
+        se.department,
+        se.evaluator
+        ) AS t
+        GROUP BY
+        t.department
+        ) AS t3 ON t3.department = d.id
+        WHERE
+        d.id LIKE '2%'
+        <if test="department!=null">
+            and d.id =#{department,jdbcType=INTEGER}
+        </if>
+    </select>
+    <!--满意度 同级，服务评价  传参 indicator（2,3） deparmtnent-->
+    <select id="satisfactionServiceOrSameSummary" parameterType="map" resultMap="scoreSummary">
+        SELECT
+        d.id AS d_id,
+        d.shortName AS d_shortName,
+        format(IFNULL((score)
+        <choose>
+            <when test="percent">
+                *1
+            </when>
+            <when test="indicator==2">
+                *0.2
+            </when>
+            <when test="indicator==3">
+                *0.05
+            </when>
+        </choose>
+        , 0), 2) AS score
+        FROM
+        department AS d
+        LEFT  JOIN
+        (
+        SELECT
+        department,
+        AVG(score) AS score
+        FROM
+        (
+        SELECT
+        se.department,
+        AVG(se.score) AS score
+        FROM
+        satisfaction_evaluation AS se
+        WHERE se.indicator = #{indicator,jdbcType=INTEGER}
+        GROUP BY
+        se.department,
+        se.evaluator
+        ) AS t
+        GROUP BY
+        t.department
+        ) AS t ON d.id = t.department
+        WHERE
+        d.id LIKE '2%'
+        <if test="department!=null">
+            and d.id =#{department,jdbcType=INTEGER}
+        </if>
+    </select>
+
+    <!--重点工作汇总-->
+    <select id="keyWorkSummary" parameterType="map" resultMap="scoreSummary">
+        SELECT
+        d.id AS d_id,
+        d.shortName AS d_shortName,
+        format(
+        IFNULL(
+        (0.3 * IFNULL(t1.score,0)+ 0.3 * IFNULL(t2.score,0)+ 0.4 * IFNULL(t3.score,0))*0.5+(IFNULL(t4.score,0))*0.5,
+        0
+        ) * 0.25,
+        2
+        ) AS score
+        FROM
+        department AS d
+        LEFT JOIN
+        (
+        SELECT
+        department,
+        AVG(score) AS score
+        FROM
+        (
+        SELECT
+        t.department,
+        evaluator,
+        AVG(score) AS score
+        FROM
+        key_work AS kw
+        LEFT JOIN employee AS e ON e.empId = kw.evaluator
+        LEFT JOIN task AS t ON t.id = kw.task
+        WHERE
+        e.identity = 11
+        GROUP BY
+        t.department,
+        evaluator
+        ) AS tt
+        GROUP BY
+        tt.department
+        ) AS t1 ON d.id = t1.department
+        LEFT JOIN (
+        SELECT
+        department,
+        AVG(score) AS score
+        FROM
+        (
+        SELECT
+        t.department,
+        evaluator,
+        AVG(score) AS score
+        FROM
+        key_work AS kw
+        LEFT JOIN employee AS e ON e.empId = kw.evaluator
+        LEFT JOIN task AS t ON t.id = kw.task
+        WHERE
+        e.identity = 12
+        GROUP BY
+        t.department,
+        evaluator
+        ) AS tt
+        GROUP BY
+        tt.department
+        ) AS t2 ON d.id = t2.department
+        LEFT JOIN (
+        SELECT
+        department,
+        AVG(score) AS score
+        FROM
+        (
+        SELECT
+        t.department,
+        kw.evaluator,
+        AVG(kw.score) AS score
+        FROM
+        key_work AS kw
+        LEFT JOIN task AS t ON t.id = kw.task
+        LEFT JOIN (
+        employee AS e
+        LEFT JOIN emp_role AS er ON er.employee = e.empId
+        ) ON kw.evaluator = e.empId
+        WHERE
+        er.department = t.department
+
+        GROUP BY
+        t.department,
+        kw.evaluator
+        ) AS tt
+        GROUP BY
+        tt.department
+        ) AS t3 ON d.id = t3.department
+        LEFT JOIN(
+        SELECT
+        department,
+        AVG(score) AS score
+        FROM
+        (
+        SELECT
+        t.department,
+        evaluator,
+        AVG(score) AS score
+        FROM
+        key_work AS kw
+        LEFT JOIN employee AS e ON e.empId = kw.evaluator
+        LEFT JOIN task AS t ON t.id = kw.task
+        WHERE
+        e.group_ != 0
+        GROUP BY
+        t.department,
+        kw.evaluator
+        ) AS t
+        GROUP BY
+        t.department
+        )AS t4 on d.id = t4.department
+        WHERE
+        d.id LIKE '2%'
+        <if test="department!=null">
+            and d.id =#{department,jdbcType=INTEGER}
+        </if>
+    </select>
+    <!-- 日常绩效同级  1：自身建设 2：工作规范-->
+    <select id="routineSummary" parameterType="map" resultMap="scoreSummary">
+        SELECT
+        d.id AS d_id,
+        d.shortName AS d_shortName,
+        IFNULL(score,0) as score
+        FROM
+        department AS d
+        LEFT  JOIN
+        (
+        SELECT
+        department,
+        FORMAT(
+        IF (
+        SUM(score) > 10,
+        10,
+        SUM(score)
+        ),
+        2
+        ) AS score
+        FROM
+        routine_performance AS rp
+        WHERE
+        indicator = #{indicator,jdbcType=INTEGER}
+        GROUP BY
+        department
+        ) AS t ON d.id = t.department
+        WHERE
+        d.id LIKE '2%'
+        <if test="department!=null">
+            and d.id =#{department,jdbcType=INTEGER}
+        </if>
+    </select>
+    <!--例外绩效 1.突出贡献 2.严重失误-->
+    <select id="irregularSummary" parameterType="map" resultMap="scoreSummary">
+        SELECT
+        d.id AS d_id,
+        d.shortName AS d_shortName,
+        IFNULL(score, 0) as score
+        FROM
+        (
+        SELECT
+        department,
+        FORMAT(
+        IF (
+        SUM(score)
+        <if test="indicator==2">
+            &lt; -10 ,-10,
+        </if>
+        <if test="indicator==1">
+            >10 ,10,
+        </if>
+        SUM(score)
+        ),
+        2
+        ) AS score
+        FROM
+        irregular_performance AS ip
+        RIGHT JOIN department AS d ON d.id = ip.department
+        WHERE
+        ip. FIRST = #{indicator,jdbcType=INTEGER}
+        GROUP BY
+        department
+        ) AS t
+        RIGHT JOIN department AS d ON d.id = t.department
+        WHERE
+        d.id LIKE '2%'
+        <if test="department!=null">
+            and d.id =#{department,jdbcType=INTEGER}
+        </if>
+
+    </select>
+</mapper>

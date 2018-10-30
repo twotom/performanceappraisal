@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.js.ccit.DAO.RegularWorkDAO">
+    <resultMap id="regularWork" type="RegularWork">
+        <id column="r_id" property="id" jdbcType="INTEGER"/>
+        <result column="r_choose" property="choose" jdbcType="INTEGER"/>
+        <result column="r_score" property="score" jdbcType="DOUBLE"/>
+        <association property="evaluator" javaType="Employee">
+            <id column="e_id" property="id" jdbcType="INTEGER"/>
+            <result column="e_empId" property="empId" jdbcType="VARCHAR"/>
+            <result column="e_name" property="name" jdbcType="VARCHAR"/>
+            <association property="identity" javaType="Identity">
+                <id column="iden_id" property="id" jdbcType="INTEGER"/>
+                <result column="iden_name" property="name" jdbcType="VARCHAR"/>
+            </association>
+            <association property="department" javaType="Department">
+                <id column="sd_id" property="id" jdbcType="INTEGER"/>
+                <result column="sd_name" property="name" jdbcType="VARCHAR"/>
+            </association>
+            <association property="group" javaType="Group">
+                <id column="g_id" property="id" jdbcType="INTEGER"/>
+                <result column="g_name" property="name" jdbcType="VARCHAR"/>
+            </association>
+        </association>
+        <association property="department" javaType="Department">
+            <id column="d_id" property="id" jdbcType="INTEGER"/>
+            <result column="d_name" property="name" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+    <sql id="base_column">
+		r.id as r_id,
+		r.choose as r_choose,
+		r.score as r_score,
+		e.id as e_id,
+		e.name as e_name,
+		e.empId as e_empId,
+		iden.id
+		as iden_id,
+		iden.name as iden_name,
+		rd.id as sd_department,
+		rd.name as sd_name,
+		d.id as d_id,
+		d.name as d_name,
+		g.id as g_id,
+		g.name as g_name
+
+	</sql>
+    <sql id="base_select_sql">
+        select
+        <include refid="base_column"></include>
+        from
+        regular_work as r
+        left join (employee as e
+        left join identity as iden on
+        iden.id = e.identity
+        left join department as rd on rd.id = e.department
+        left join groups as g on g.id = e.group_ ) on e.empId = r.evaluator
+        left join department as d on r.department = d.id
+    </sql>
+    <select id="selectScore" resultMap="regularWork" parameterType="map">
+        SELECT
+        <include refid="base_column"></include>
+        FROM
+        department as d
+        LEFT JOIN
+        (
+        SELECT
+        *
+        FROM
+        regular_work AS rw
+        WHERE
+           rw.evaluator = #{evaluator,jdbcType=VARCHAR}
+        ) as r
+        left join (employee as e
+        left join identity as iden on
+        iden.id = e.identity
+        left join department as rd on rd.id = e.department
+        left join groups as g on g.id = e.group_ ) on e.empId = r.evaluator
+        on d.id = r.department
+        where d.id like '2%'
+
+    </select>
+
+    <select id="select" resultMap="regularWork" parameterType="map">
+        <include refid="base_select_sql"></include>
+
+        <where>
+            <trim prefixOverrides="AND" suffixOverrides=",">
+                <if test="evaluator!= null">
+                    AND evaluator = #{evaluator,jdbcType=VARCHAR},
+                </if>
+                <if test="department != null ">
+                    AND r.department = #{department,jdbcType=INTEGER},
+                </if>
+            </trim>
+        </where>
+
+        <if test="orderByEvaluator!=null">
+            order by r.evaluator
+        </if>
+
+    </select>
+
+    <insert id="insert" parameterType="RegularWork">
+		insert into regular_work (department,
+		evaluator,choose,score
+		)
+		values (
+		#{department.id,jdbcType=INTEGER},#{evaluator.empId,jdbcType=VARCHAR},#{choose,jdbcType=INTEGER},
+		#{score,jdbcType=DOUBLE}
+		)
+  </insert>
+    <update id="update" parameterType="RegularWork">
+        update regular_work
+        <set>
+            <if test="evaluator!= null and evaluator.empId!=null">
+                evaluator = #{evaluator.empId,jdbcType=VARCHAR},
+            </if>
+            <if test="department != null and department.id != null">
+                department = #{department.id,jdbcType=INTEGER},
+            </if>
+            <if test="choose!= null">
+                choose = #{choose,jdbcType=INTEGER},
+            </if>
+            <if test="score!= null">
+                score = #{score,jdbcType=DOUBLE},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+</mapper>

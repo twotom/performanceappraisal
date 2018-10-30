@@ -1,0 +1,213 @@
+
+body {
+    padding-top: 50px;
+}
+
+.sub-header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.navbar-fixed-top {
+    border: 0;
+}
+
+.sidebar {
+    display: none;
+}
+
+.sidebar .divider{
+    padding: 10px 0;
+}
+
+@media (min-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 50px;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        display: block;
+        padding: 20px;
+        overflow-x: hidden;
+        overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+        background-color: #f5f5f5;
+        border-right: 1px solid #eee;
+    }
+}
+
+.nav-sidebar {
+    margin-right: -21px; /* 20px padding + 1px border */
+    margin-bottom: 20px;
+    margin-left: -20px;
+}
+
+.nav-sidebar > .active > a,
+.nav-sidebar > .active > a:hover,
+.nav-sidebar > .active > a:focus {
+    color: #fff;
+    background-color: #428bca;
+}
+
+.main {
+    padding: 20px;
+    position: relative;
+    height: 100%;
+    overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+    .main {
+        padding-right: 40px;
+        padding-left: 40px;
+    }
+}
+
+.main .page-header {
+    margin-top: 0;
+}
+
+/*
+ * Placeholder dashboard ideas
+ */
+
+.placeholders {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.placeholders h4 {
+    margin-bottom: 0;
+}
+
+.placeholder {
+    margin-bottom: 20px;
+}
+
+.placeholder img {
+    display: inline-block;
+    border-radius: 50%;
+}
+
+.main textarea {
+    height: 34px;
+    transition: height 0.8s;
+    min-width: 160px;
+    -moz-transition: height 0.8s; /* Firefox 4 */
+    -webkit-transition: height 0.8s; /* Safari 和 Chrome */
+    -o-transition: height 0.8s; /* Opera */
+}
+
+.main textarea:focus {
+    height: 106px;
+}
+
+.assessment-title {
+    padding: 8px 0 12px 8px;
+    color: #ffffff;
+}
+
+.assessment-list {
+    list-style: none;
+}
+
+.exclusion-description {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: height 0.3s;
+    -moz-transition: height 0.3s; /* Firefox 4 */
+    -webkit-transition: height 0.3s; /* Safari 和 Chrome */
+    -o-transition: height 0.3s; /* Opera */
+}
+
+.satisfaction-description {
+    max-width: 560px;
+}
+
+.exclusion-description > p {
+    max-width: 500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: all 0.3s;
+    -moz-transition: height 0.3s; /* Firefox 4 */
+    -webkit-transition: height 0.3s; /* Safari 和 Chrome */
+    -o-transition: height 0.3s; /* Opera */
+}
+
+.exclusion-description > * {
+    float: left;
+    display: inline-block;
+}
+
+.exclusion {
+    max-width: 100px;
+    min-width: 80px;
+    vertical-align: middle !important;
+}
+
+.rowspan {
+    vertical-align: middle !important;
+}
+
+.display-normal {
+    overflow: auto !important;
+    text-overflow: clip !important;
+    white-space: pre-wrap !important;
+    max-width: none !important;
+}
+
+.department-divider{
+    margin-top: 60px !important;
+}
+
+.department-annotations{
+    margin-top: 40px !important;
+    margin-bottom: 40px !important;
+}
+
+.radio-oneline > div.radio{
+    display: inline-block;
+}
+
+th{
+    word-break:keep-all;           /* 不换行 */
+    white-space:nowrap;          /* 不换行 */
+    text-align: center;
+}
+
+.radio > label{
+    word-break:keep-all;           /* 不换行 */
+    white-space:nowrap;          /* 不换行 */
+}
+
+td{
+    vertical-align: middle !important;
+    text-align: center;
+}
+
+.separated{
+    padding: 20px 0;
+    margin: 5px 0;
+    border-right: 1px solid #cccccc;
+}
+
+p[data-file]{
+    margin: 0 !important;
+}
+
+.print-condensed{
+    font-size: 10px;
+}
+
+.show-normal{
+    word-break: normal;           /* 不换行 */
+    white-space: normal;
+}
+
+.print-title,
+.print-footer{
+    display: none;
+}

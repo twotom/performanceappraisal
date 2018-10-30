@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.js.ccit.DAO.IrregularPerformanceDAO">
+    <resultMap id="irregularPerformance" type="IrregularPerformance">
+        <id column="i_id" property="id" jdbcType="INTEGER"/>
+        <result column="i_first" property="first" jdbcType="INTEGER"/>
+        <result column="i_second" property="second" jdbcType="INTEGER"/>
+        <result column="i_element" property="element" jdbcType="INTEGER"/>
+        <result column="i_score" property="score" jdbcType="DOUBLE"/>
+        <result column="i_comment" property="comment" jdbcType="VARCHAR"/>
+        <result column="i_evidenceFile" property="evidenceFile" jdbcType="VARCHAR"/>
+        <association property="department" javaType="Department">
+            <id column="d_id" property="id" jdbcType="INTEGER"/>
+            <result column="d_shortName" property="shortName" jdbcType="VARCHAR"/>
+        </association>
+        <association property="evaluator" javaType="Employee">
+            <id column="e_id" property="id" jdbcType="INTEGER"/>
+            <result column="e_empId" property="empId" jdbcType="VARCHAR"/>
+            <result column="e_name" property="name" jdbcType="VARCHAR"/>
+            <association property="identity" javaType="Identity">
+                <id column="iden_id" property="id" jdbcType="INTEGER"/>
+                <result column="iden_name" property="name" jdbcType="VARCHAR"/>
+            </association>
+            <association property="department" javaType="Department">
+                <id column="ed_id" property="id" jdbcType="INTEGER"/>
+                <result column="ed_shortName" property="shortName" jdbcType="VARCHAR"/>
+            </association>
+            <association property="group" javaType="Group">
+                <id column="g_id" property="id" jdbcType="INTEGER"/>
+                <result column="g_name" property="name" jdbcType="VARCHAR"/>
+            </association>
+        </association>
+    </resultMap>
+    <sql id="base_select_sql">
+		select
+		i.id as i_id,
+		i.element as i_element,
+		i.score as i_score,
+		i.first as i_first,
+		i.second as i_second,
+		i.department as i_id,
+		i.comment as i_comment,
+		i.evidenceFile as i_evidenceFile,
+		e.id as e_id,
+		e.name as e_name,
+		e.empId as e_empId,
+		iden.id as iden_id,
+		iden.name as iden_name,
+		ed.id as ed_id,
+		ed.shortName as ed_shortName,
+		g.id as g_id,
+		g.name as g_name,
+		d.id as d_id
+		from irregular_performance AS i
+		left join department as d on
+		i.department = d.id
+		left join (employee as e
+		left join identity as iden on iden.id = e.identity
+		left join department as ed on ed.id = e.department
+		left join groups as g on g.id = e.group_ ) on e.empId = i.evaluator
+	</sql>
+    <select id="selectByPrimaryKey" resultMap="irregularPerformance"
+            parameterType="java.lang.Integer">
+        <include refid="base_select_sql"></include>
+        where
+        i.id = #{id,jdbcType=INTEGER}
+    </select>
+    <!--常规查询-->
+    <select id="select" resultMap="irregularPerformance"
+            parameterType="map">
+        <include refid="base_select_sql"></include>
+        <where>
+            <trim prefixOverrides="and">
+                <if test="first != null">
+                    and i.first = #{first,jdbcType=INTEGER}
+                </if>
+                <if test="second != null">
+                    and i.second = #{second,jdbcType=INTEGER}
+                </if>
+                <if test="element != null">
+                    and i.element = #{element,jdbcType=INTEGER}
+                </if>
+                <if test="department != null  ">
+                    and i.department = #{department,jdbcType=INTEGER}
+                </if>
+            </trim>
+
+        </where>
+    </select>
+    <!--部门分项汇总  支持一级指标-->
+    <select id="selectSummary" resultMap="irregularPerformance"
+            parameterType="map">
+
+        SELECT
+        d.id as d_id,
+        d.shortName as d_shortName,
+        IFNULL(t.`first`, 1) AS i_first,
+        IFNULL(t.`second`, #{second,jdbcType=INTEGER}) AS i_second,
+        IFNULL(
+        IF (t.score > 10, 10, t.score),
+        0
+        ) AS i_score
+        FROM
+        department AS d
+        LEFT JOIN (
+        SELECT
+        id,
+        FIRST,
+        SECOND,
+        department,
+        SUM(score) AS score
+        FROM
+        irregular_performance AS i
+        WHERE
+        i. FIRST = 1
+        AND i. SECOND =#{second,jdbcType=INTEGER}
+        GROUP BY
+        department
+        ) AS t ON d.id = t.department
+        WHERE
+        d.id LIKE '2%'
+        <if test="department != null  ">
+            and d.id = #{department,jdbcType=INTEGER}
+        </if>
+    </select>
+
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from
+		irregular_performance
+		where id = #{id,jdbcType=INTEGER}
+	</delete>
+    <insert id="insert" parameterType="IrregularPerformance">
+		insert into
+		irregular_performance ( first, second,
+		element, department, evaluator,score,
+		comment,evidenceFile)
+		values ( #{first,jdbcType=INTEGER},
+		#{second,jdbcType=INTEGER},
+		#{element,jdbcType=INTEGER},
+		#{department.id,jdbcType=INTEGER},#{evaluator.empId,jdbcType=VARCHAR}, #{score,jdbcType=DOUBLE},
+		#{comment,jdbcType=VARCHAR},#{evidenceFile,jdbcType=VARCHAR})
+	</insert>
+
+
+    <update id="updateByPrimaryKey" parameterType="IrregularPerformance">
+        update irregular_performance
+        <set>
+            <if test="first != null">
+                first = #{first,jdbcType=INTEGER},
+            </if>
+            <if test="second != null">
+                second = #{second,jdbcType=INTEGER},
+            </if>
+            <if test="element != null">
+                element = #{element,jdbcType=INTEGER},
+            </if>
+            <if test="department != null and department.id != null ">
+                department = #{department.id,jdbcType=INTEGER},
+            </if>
+            <if test="evaluator != null and evaluator.empId != null ">
+                evaluator = #{evaluator.empId,jdbcType=VARCHAR},
+            </if>
+            <if test="score != null">
+                score = #{score,jdbcType=DOUBLE},
+            </if>
+            <if test="comment != null">
+                comment = #{comment,jdbcType=VARCHAR},
+            </if>
+            <if test="evidenceFile != null">
+                evidenceFile = #{evidenceFile,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+</mapper>

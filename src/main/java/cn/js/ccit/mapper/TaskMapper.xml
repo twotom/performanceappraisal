@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.js.ccit.DAO.TaskDAO" >
+  <resultMap id="task" type="Task" >
+    <id column="t_id" property="id" jdbcType="INTEGER" />
+    <result column="t_name" property="name" jdbcType="VARCHAR" />
+    <association property="department" javaType="Department">
+      <id column="d_id" property="id" jdbcType="INTEGER"/>
+      <result column="d_shortName" property="shortName" jdbcType="VARCHAR"/>
+    </association>
+
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, name
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="task" parameterType="java.lang.Integer" >
+    select 
+    t.id as t_id,
+    t.name as t_name,
+    d.id as d_id,
+    d.shortName as  d_shortName
+    from task as t	
+    	left join department as d on t.department = d.id
+    where t.id = #{id,jdbcType=INTEGER}
+  </select>
+
+</mapper>

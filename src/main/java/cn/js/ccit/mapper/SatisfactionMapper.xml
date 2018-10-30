@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.js.ccit.DAO.SatisfactionDAO">
+
+	<resultMap id="satisfaction" type="Satisfaction">
+		<id column="s_id" property="id" jdbcType="INTEGER" />
+		<result column="s_indicator" property="indicator" jdbcType="INTEGER" />
+		<result column="s_element" property="element" jdbcType="INTEGER" />
+		<result column="s_choose" property="choose" jdbcType="INTEGER" />
+		<result column="s_score" property="score" jdbcType="DOUBLE" />
+		<association property="evaluator" javaType="Employee">
+			<id column="e_id" property="id" jdbcType="INTEGER" />
+			<result column="e_empId" property="empId" jdbcType="VARCHAR" />
+			<result column="e_name" property="name" jdbcType="VARCHAR" />
+			<association property="identity" javaType="Identity">
+				<id column="iden_id" property="id" jdbcType="INTEGER" />
+				<result column="iden_name" property="name" jdbcType="VARCHAR" />
+			</association>
+			<association property="department" javaType="Department">
+				<id column="ed_id" property="id" jdbcType="INTEGER" />
+				<result column="ed_shortName" property="shortName" jdbcType="VARCHAR" />
+			</association>
+			<association property="group" javaType="Group">
+				<id column="g_id" property="id" jdbcType="INTEGER" />
+				<result column="g_name" property="name" jdbcType="VARCHAR" />
+			</association>
+		</association>
+		<association property="department" javaType="Department">
+				<id column="d_id" property="id" jdbcType="INTEGER" />
+				<result column="d_name" property="name" jdbcType="VARCHAR" />
+		</association>
+	</resultMap>
+	<sql id="base_select_sql">
+		select
+		s.id as s_id,
+		s.indicator as s_indicator,
+		s.evaluator as s_evaluator,
+		s.element as s_element,
+		s.choose as s_choose,
+		s.score as s_score,
+		e.id as e_id,
+		e.name as e_name,
+		e.empId as e_empId,
+		iden.id as iden_id,
+		iden.name as iden_name,
+		ed.id as ed_id,
+		ed.shortName as ed_shortName,
+		d.id as d_id,
+		d.name as d_name,
+		g.id as g_id,
+		g.name as g_name
+		from satisfaction_evaluation AS s
+		left join (employee as e
+		left join identity as iden on iden.id = e.identity
+		left join department as ed on ed.id = e.department
+		left join groups as g on g.id = e.group_ ) on e.empId = s.evaluator
+		left join department as d on s.department = d.id
+  </sql>
+	<select id="selectByPrimaryKey" resultMap="satisfaction"
+		parameterType="java.lang.Integer">
+		<include refid="base_select_sql"></include>
+		where s.id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <!-- byMap  indicator evalutor element department -->
+  
+  <select id="select" parameterType="map" resultMap="satisfaction">
+  		<include refid="base_select_sql"></include>
+  		<where>
+  			<trim prefixOverrides="and">
+  				<if test="indicator">
+  					and indicator = #{indicator,jdbcType=INTEGER}
+  				</if>
+  				<if test="evaluator">
+  					and evaluator = #{evaluator,jdbcType=INTEGER}
+  				</if>
+  				<if test="element">
+  					and element = #{element,jdbcType=INTEGER}
+  				</if>
+  				<if test="department">
+  					and department = #{department,jdbcType=INTEGER}
+  				</if>
+  			</trim>
+  		
+  		</where>
+  </select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from satisfaction_evaluation
+		where id = #{id,jdbcType=INTEGER}
+  </delete>
+	<insert id="insert" parameterType="cn.js.ccit.model.Satisfaction">
+		insert into satisfaction_evaluation ( indicator, evaluator,
+		element, choose, score, department
+		)
+		values ( #{indicator,jdbcType=INTEGER},
+		#{evaluator.empId,jdbcType=VARCHAR},
+		#{element,jdbcType=INTEGER}, #{choose,jdbcType=INTEGER}, #{score,jdbcType=DOUBLE}, #{department.id,jdbcType=INTEGER}
+		)
+  </insert>
+
+	<update id="updateByPrimaryKey" parameterType="Satisfaction">
+		update satisfaction_evaluation
+		<set>
+			<if test="indicator != null">
+				indicator = #{indicator,jdbcType=INTEGER},
+      </if>
+			<if test="evaluator != null and evaluator.id!=null">
+				evaluator = #{evaluator.empId,jdbcType=VARCHAR},
+      </if>
+			<if test="element != null">
+				element = #{element,jdbcType=INTEGER},
+      </if>
+			<if test="choose != null">
+				choose = #{choose,jdbcType=INTEGER},
+      </if>
+			<if test="score != null">
+				score = #{score,jdbcType=DOUBLE},
+      </if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

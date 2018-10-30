@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <!-- 开启二级缓存，默认是false -->
+        <setting name="cacheEnabled" value="false"/>
+    </settings>
+    <typeAliases>
+        <typeAlias type="cn.js.ccit.model.Employee" alias="Employee"/>
+        <typeAlias type="cn.js.ccit.model.Department" alias="Department"/>
+        <typeAlias type="cn.js.ccit.model.Group" alias="Group"/>
+        <typeAlias type="cn.js.ccit.model.Identity" alias="Identity"/>
+        <typeAlias type="cn.js.ccit.model.KeyWork" alias="KeyWork"/>
+        <typeAlias type="cn.js.ccit.model.IrregularPerformance" alias="IrregularPerformance"/>
+        <typeAlias type="cn.js.ccit.model.RoutinePerformance" alias="RoutinePerformance"/>
+        <typeAlias type="cn.js.ccit.model.Task" alias="Task"/>
+        <typeAlias type="cn.js.ccit.model.Satisfaction" alias="Satisfaction"/>
+        <typeAlias type="cn.js.ccit.model.SelfEvaluation" alias="SelfEvaluation"/>
+        <typeAlias type="cn.js.ccit.model.RegularWork" alias="RegularWork"/>
+        <typeAlias type="cn.js.ccit.model.ContributeSelfEvaluation" alias="ContributeSelfEvaluation"/>
+        <typeAlias type="cn.js.ccit.model.ScoreSummary" alias="ScoreSummary"/>
+        <typeAlias type="cn.js.ccit.model.SystemTime" alias="SystemTime"/>
+        <typeAlias type="cn.js.ccit.model.KWState" alias="KWState"/>
+    </typeAliases>
+
+</configuration>

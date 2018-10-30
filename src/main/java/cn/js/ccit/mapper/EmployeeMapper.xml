@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.js.ccit.DAO.EmployeeDAO">
+    <cache/>
+    <resultMap id="employee" type="Employee">
+        <id column="e_id" property="id"></id>
+        <result column="e_empId" property="empId" jdbcType="VARCHAR"></result>
+        <result column="e_name" property="name" jdbcType="VARCHAR"></result>
+        <result column="e_pwd" property="pwd" jdbcType="VARCHAR"></result>
+        <result column="e_sex" property="sex" jdbcType="VARCHAR"></result>
+        <result column="e_ranId" property="ranId" jdbcType="VARCHAR"></result>
+        <result column="e_state" property="state" jdbcType="VARCHAR"></result>
+        <association property="identity" javaType="Identity">
+            <id column="iden_id" property="id" jdbcType="INTEGER"/>
+            <result column="iden_name" property="name" jdbcType="VARCHAR"/>
+        </association>
+        <association property="department" javaType="Department">
+            <id column="d_id" property="id" jdbcType="INTEGER"/>
+            <result column="d_shortName" property="shortName" jdbcType="VARCHAR"/>
+        </association>
+        <association property="group" javaType="Group">
+            <id column="g_id" property="id" jdbcType="INTEGER"/>
+            <result column="g_name" property="name" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+    <sql id="baseSelectSql">
+		SELECT
+		e.id as e_id,
+		e.empId as e_empId,
+		e.name as e_name,
+		e.pwd as e_pwd,
+		e.sex as e_sex,
+		e.ranId as e_ranId,
+		iden.id as iden_id,
+		iden.name as iden_name,
+		d.id as d_id,
+		d.shortName as d_shortName,
+		g.id as g_id,
+		g.name as g_name
+		FROM employee as e
+		left join identity as iden on iden.id = e.identity
+		left join department as d on d.id = e.department
+		left join groups as g on g.id = e.group_
+	</sql>
+    <select id="selectByMap" parameterType="map" resultMap="employee">
+        <include refid="baseSelectSql"></include>
+        <where>
+            <trim prefixOverrides="and">
+                <if test="empId != null">
+                    AND empId = #{empId}
+                </if>
+                <if test="name != null and name != ''">
+                    AND name = #{name}
+                </if>
+                <if test="sex != null and sex != ''">
+                    AND sex = #{sex}
+                </if>
+                <if test="pwd != null and pwd != ''">
+                    AND pwd = #{pwd}
+                </if>
+                <if test="identity != null">
+                    AND identity = #{identity}
+                </if>
+                <if test="department != null">
+                    AND department = #{department}
+                </if>
+                <if test="group != null">
+                    AND group = #{group}
+                </if>
+                <if test="state != null">
+                    AND state = #{state}
+                </if>
+            </trim>
+        </where>
+    </select>
+    <select id="select" parameterType="employee" resultMap="employee">
+        <include refid="baseSelectSql"></include>
+        <where>
+            <trim prefixOverrides="and">
+                <if test="empId != null">
+                    AND empId = #{empId}
+                </if>
+                <if test="name != null and name != ''">
+                    AND name = #{name}
+                </if>
+                <if test="sex != null and sex != ''">
+                    AND sex = #{sex}
+                </if>
+                <if test="pwd != null and pwd != ''">
+                    AND pwd = #{pwd}
+                </if>
+                <if test="identity != null">
+                    AND identity = #{identity.id}
+                </if>
+                <if test="department != null">
+                    AND department = #{department.id}
+                </if>
+                <if test="group != null">
+                    AND group = #{group.id}
+                </if>
+                <if test="state != null">
+                    AND state = #{state}
+                </if>
+            </trim>
+        </where>
+    </select>
+    <insert id="insert" parameterType="cn.js.ccit.model.Employee">
+		insert into employee ( empId, name, sex,
+		pwd, identity, department,
+		group_)
+		values ( #{empId,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{sex
+		,jdbcType=CHAR},
+		#{pwd,jdbcType=VARCHAR}, #{identity.id,jdbcType=INTEGER}, #{department.id,jdbcType=INTEGER},
+		#{group.id,jdbcType=INTEGER})
+  </insert>
+
+    <!--随机账号 登录-->
+    <select id="ranLogin" parameterType="employee" resultMap="employee" >
+        <include refid="baseSelectSql"></include>
+        WHERE
+          e.ranId =#{ranId,jdbcType=VARCHAR}
+        AND e.ranPwd = #{ranPwd,jdbcType=VARCHAR}
+        AND e.state = #{state,jdbcType=INTEGER}
+    </select>
+<update id="update" parameterType="Employee">
+    update employee
+    <set>
+        <if test="ranPwd!=null">
+            ranPwd= #{ranPwd,jdbcType=VARCHAR},
+        </if>
+
+        <if test="state!=null">
+            state= #{state,jdbcType=INTEGER},
+        </if>
+
+    </set>
+
+ WHERE  id = #{id,jdbcType=INTEGER}
+</update>
+
+
+</mapper>

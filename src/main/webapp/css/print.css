@@ -1,0 +1,23 @@
+.print-title{
+    display: block;
+    text-align: center;
+    color: firebrick !important;
+    border-bottom: 3px solid firebrick;
+    margin-bottom: 60px;
+    padding-bottom: 20px;
+}
+
+.print-footer{
+    display: block;
+    margin-top: 60px;
+    text-align: right;
+}
+
+td{
+    word-break:keep-all;           /* 不换行 */
+    white-space:nowrap;          /* 不换行 */
+}
+
+#print{
+    width: 1000px;
+}

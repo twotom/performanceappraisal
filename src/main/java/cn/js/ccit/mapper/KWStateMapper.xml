@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.js.ccit.DAO.KWStateDAO">
+    <resultMap id="kWState" type="KWState">
+        <id column="kws_id" property="id" jdbcType="INTEGER"/>
+        <result column="kws_state" property="state" jdbcType="INTEGER"/>
+        <result column="kws_evaluator" property="evaluator" jdbcType="INTEGER"/>
+        <association property="department" javaType="Department">
+            <id column="d_id" property="id" jdbcType="INTEGER"/>
+            <result column="d_name" property="name" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+    <sql id="base_column">
+    kws.id as kws_id,
+    kws.state as kws_state,
+    kws.evaluator as kws_evaluator,
+    d.id as d_id,
+    d.shortName as d_shortName
+  </sql>
+    <sql id="base_select_sql">
+        SELECT
+        <include refid="base_column"></include>
+        from kw_state as kws
+        LEFT JOIN department as d on kws.department = d.id
+    </sql>
+    <select id="select" resultMap="kWState" parameterType="map">
+        <include refid="base_select_sql"></include>
+
+        <where>
+            <trim prefixOverrides="AND" suffixOverrides=",">
+                <if test="state!= null">
+                    AND kws.state = #{state,jdbcType=INTEGER}
+                </if>
+                <if test="department != null ">
+                    AND kws.department = #{department,jdbcType=INTEGER}
+                </if>
+                <if test="evaluator != null ">
+                    AND kws.evaluator = #{evaluator,jdbcType=INTEGER}
+                </if>
+            </trim>
+        </where>
+    </select>
+    <select id="selectDptState" resultMap="kWState" parameterType="map">
+        SELECT
+        t.id as kws_id,
+        t.state as kws_state,
+        t.evaluator as kws_evaluator,
+        d.id as d_id,
+        d.shortName as d_shortName
+        from department as d
+        LEFT JOIN (
+        SELECT
+        *
+        FROM
+        kw_state AS kws
+        <where>
+            <trim prefixOverrides="AND" suffixOverrides=",">
+                <if test="evaluator != null ">
+                    AND kws.evaluator = #{evaluator,jdbcType=INTEGER}
+                </if>
+            </trim>
+        </where>
+        ) AS t ON d.id = t.department
+        where d.id like '2%'
+        <trim prefixOverrides="AND" suffixOverrides=",">
+            <if test="department != null ">
+                AND d.id = #{department,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </select>
+ <insert id="insert" parameterType="KWState">
+  insert kw_state (department,state,evaluator) VALUES (#{department.id,jdbcType=INTEGER},
+                     1,#{evaluator,jdbcType=VARCHAR})
+
+</insert>
+
+
+</mapper>

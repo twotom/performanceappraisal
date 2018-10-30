@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.js.ccit.DAO.KeyWorkDAO">
+
+    <resultMap id="keyWork" type="KeyWork">
+        <id column="k_id" property="id"></id>
+        <result column="k_grade" property="grade" jdbcType="INTEGER"></result>
+        <result column="k_level" property="level" jdbcType="INTEGER"></result>
+        <result column="k_charge" property="charge" jdbcType="INTEGER"></result>
+        <result column="k_score" property="score" jdbcType="DOUBLE"></result>
+        <association property="task" javaType="Task">
+            <id column="t_id" property="id" jdbcType="INTEGER"/>
+            <result column="t_name" property="name" jdbcType="VARCHAR"/>
+            <association property="department" javaType="Department">
+                <id column="td_id" property="id" jdbcType="INTEGER"/>
+                <result column="td_shortName" property="shortName" jdbcType="VARCHAR"/>
+            </association>
+        </association>
+        <association property="evaluator" javaType="Employee">
+            <id column="e_id" property="id" jdbcType="INTEGER"/>
+            <result column="e_empId" property="empId" jdbcType="VARCHAR"/>
+            <result column="e_name" property="name" jdbcType="VARCHAR"/>
+            <association property="identity" javaType="Identity">
+                <id column="iden_id" property="id" jdbcType="INTEGER"/>
+                <result column="iden_name" property="name" jdbcType="VARCHAR"/>
+            </association>
+            <association property="department" javaType="Department">
+                <id column="ed_id" property="id" jdbcType="INTEGER"/>
+                <result column="ed_shortName" property="shortName" jdbcType="VARCHAR"/>
+            </association>
+            <association property="group" javaType="Group">
+                <id column="g_id" property="id" jdbcType="INTEGER"/>
+                <result column="g_name" property="name" jdbcType="VARCHAR"/>
+            </association>
+        </association>
+    </resultMap>
+
+    <sql id="base_select_sql">
+        SELECT
+        k.id as k_id,
+        k.grade as k_grade,
+        k.level as k_level,
+        k.charge as k_charge,
+        k.score as k_score,
+        t.id as t_id,
+        t.name as t_name,
+        t.department as td_id,
+        td.id as td_id,
+        td.shortName as td_shortName,
+        e.id as e_id,
+        e.name as e_name,
+        e.empId as e_empId,
+        iden.id as iden_id,
+        iden.name as iden_name,
+        ed.id as ed_id,
+        ed.shortName as ed_shortName,
+        g.id as g_id,
+        g.name as g_name
+        FROM key_work as k
+        left join (task as t
+        left join department as td on t.department = td.id) on k.task = t.id
+        left join (employee as e
+        left join identity as iden on iden.id = e.identity
+        left join department as ed on ed.id = e.department
+        left join groups as g on g.id = e.group_ ) on e.empId = k.evaluator
+
+    </sql>
+    <insert id="insert" parameterType="KeyWork">
+		insert into key_work (task,grade,level,charge,evaluator,score)
+		values(#{task.id,jdbcType=INTEGER},#{grade,jdbcType=INTEGER},#{level,jdbcType=INTEGER},#{charge,jdbcType=INTEGER},
+		#{evaluator.empId,jdbcType=VARCHAR},#{score,jdbcType=DOUBLE})
+	</insert>
+    <update id="update" parameterType="KeyWork">
+        update key_work
+        <trim prefix="set" suffixOverrides=",">
+            <if test="task!=null and task.id!=null">task = #{task.id,jdbcType=INTEGER},</if>
+            <if test="grade!=null ">grade = #{grade,jdbcType=INTEGER},</if>
+            <if test="level!=null ">level = #{level,jdbcType=INTEGER},</if>
+            <if test="charge!=null ">charge = #{charge,jdbcType=INTEGER},</if>
+            <if test="evaluator!=null and evaluator.empId !=null ">evaluator = #{evaluator.empId,jdbcType=VARCHAR},</if>
+            <if test="score!=null">score = #{score,jdbcType=DOUBLE},</if>
+        </trim>
+        WHERE id=#{id}
+
+    </update>
+
+    <select id="select" parameterType="map" resultMap="keyWork">
+        <include refid="base_select_sql"></include>
+        <where>
+            <trim prefixOverrides="and">
+                <if test="task!=null and task.id!=null">
+                    AND k.task = #{task.id,jdbcType=INTEGER}
+                </if>
+                <if test="department!=null">
+                    AND t.department = #{department,jdbcType=INTEGER}
+                </if>
+                <if test="evaluator!=null">
+                    AND k.evaluator = #{evaluator,jdbcType=VARCHAR}
+                </if>
+            </trim>
+        </where>
+
+    </select>
+
+
+    <select id="selectByDpt" parameterType="map" resultMap="keyWork"  >
+        SELECT
+        k.id as k_id,
+        k.grade as k_grade,
+        k.level as k_level,
+        k.charge as k_charge,
+        AVG(k.score) as k_score,
+        t.id as t_id,
+        t.name as t_name,
+        td.id as td_id,
+        td.shortName as td_shortName,
+        e.id as e_id,
+        e.name as e_name,
+        e.empId as e_empId,
+        iden.id as iden_id,
+        iden.name as iden_name,
+        ed.id as ed_id,
+        ed.shortName as ed_shortName,
+        g.id as g_id,
+        g.name as g_name
+        FROM key_work as k
+        left join (task as t
+        left join department as td on t.department = td.id) on k.task = t.id
+        left join (employee as e
+        left join identity as iden on iden.id = e.identity
+        left join department as ed on ed.id = e.department
+        left join groups as g on g.id = e.group_ ) on e.empId = k.evaluator
+        <where>
+            <trim prefixOverrides="and">
+                <if test="department!=null">
+                    AND t.department = #{department,jdbcType=INTEGER}
+                </if>
+            </trim>
+        </where>
+        GROUP  BY  t.department,k.evaluator
+    </select>
+<select id="selectScore" parameterType="map" resultMap="keyWork">
+SELECT
+		k_id,
+	k_grade,
+	k_level,
+	k_charge,
+	k_score,
+	t_id,
+	t_name,
+	d.id as td_id,
+	d.shortName as td_shortName,
+	e.id AS e_id,
+	e. NAME AS e_name,
+	e.empId AS e_empId,
+	iden.id AS iden_id,
+	iden. NAME AS iden_name,
+	ed.id AS ed_id,
+	ed.shortName AS ed_shortName
+FROM
+	department AS d
+LEFT JOIN (
+	SELECT
+		k.id AS k_id,
+		k.grade AS k_grade,
+		k. LEVEL AS k_level,
+		k.charge AS k_charge,
+		evaluator,
+		AVG(k.score) AS k_score,
+		t.id AS t_id,
+		t.NAME AS t_name,
+		td.id as td_id,
+    td.shortName as td_shortName
+	FROM
+		key_work AS k
+	LEFT JOIN (
+		task AS t
+		LEFT JOIN department AS td ON t.department = td.id
+	) ON k.task = t.id
+	WHERE
+		k.evaluator = #{evaluator,jdbcType=VARCHAR}
+	GROUP BY
+		t.department,
+		k.evaluator
+) AS k ON k.td_id = d.id
+LEFT JOIN (
+	employee AS e
+	LEFT JOIN identity AS iden ON iden.id = e.identity
+	LEFT JOIN department AS ed ON ed.id = e.department
+	LEFT JOIN groups AS g ON g.id = e.group_
+) ON e.empId = k.evaluator
+WHERE
+	d.id LIKE '2%'
+
+
+</select>
+
+</mapper>

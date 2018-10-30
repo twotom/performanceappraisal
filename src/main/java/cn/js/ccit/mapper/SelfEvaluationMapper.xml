@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.js.ccit.DAO.SelfEvaluationDAO">
+    <resultMap id="selfEvaluation" type="SelfEvaluation">
+        <id column="s_id" property="id" jdbcType="INTEGER"/>
+        <result column="s_score" property="score" jdbcType="DOUBLE"/>
+        <result column="s_finish" property="finish" javaType="boolean" jdbcType="BIT"/>
+        <result column="s_comment" property="comment" jdbcType="VARCHAR"/>
+        <association property="task" javaType="Task">
+            <id column="t_id" property="id" jdbcType="INTEGER"/>
+            <result column="t_name" property="name" jdbcType="VARCHAR"/>
+        </association>
+        <association property="department" javaType="Department">
+            <id column="d_id" property="id" jdbcType="INTEGER"/>
+            <result column="d_shortName" property="shortName" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+    <sql id="base_column_sql">
+		s.id as s_id,
+		s.score as s_score,
+		s.finish as s_finish,
+		s.comment as s_comment,
+		d.id as d_id,
+		d.shortName as d_shortName,
+		t.id as t_id,
+		t.name as t_name
+
+	</sql>
+    <select id="selectByPrimaryKey" resultMap="selfEvaluation"
+            parameterType="java.lang.Integer">
+        select
+        <include refid="base_column_sql"></include>
+        from self_evaluation AS s
+        left join department as d on d.id =
+        s.department
+        left join task as t on t.id = s.task
+        where id =
+        #{id,jdbcType=INTEGER}
+    </select>
+    <!-- by task department -->
+    <select id="select" resultMap="selfEvaluation" parameterType="map">
+        select
+        <include refid="base_column_sql"></include>
+        from self_evaluation AS s
+        left join department as d on d.id =
+        s.department
+        left join task as t on t.id = s.task
+        <where>
+            <trim prefixOverrides="and">
+                <if test="task!=null">
+                    and task = #{task,jdbcType=INTEGER}
+
+                </if>
+                <if test="department!=null">
+                    and
+                    s.department =
+                    #{department,jdbcType=INTEGER}
+
+                </if>
+            </trim>
+        </where>
+
+    </select>
+    <insert id="insert" parameterType="SelfEvaluation">
+		insert into self_evaluation
+		(department,task,finish, score,comment)
+		values(
+		#{department.id,jdbcType=INTEGER},
+		#{task.id,jdbcType=INTEGER},
+		#{finish,jdbcType=BIT},
+		#{score,jdbcType=DOUBLE},
+		#{comment,jdbcType=VARCHAR})
+	</insert>
+
+    <update id="updateByPrimaryKey" parameterType="SelfEvaluation">
+        update self_evaluation
+        <set>
+
+            <if test="score != null">
+                score = #{score,jdbcType=DOUBLE},
+            </if>
+            <if test="finish != null">
+                finish = #{finish,jdbcType=BIT},
+            </if>
+            <if test="comment != null">
+                comment = #{comment,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+</mapper>
